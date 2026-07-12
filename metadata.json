@@ -1,0 +1,6 @@
+{
+  "name": "Farm Mate",
+  "description": "Knowledge-based Crop Disease Identification system and agricultural stewardship portal.",
+  "requestFramePermissions": ["camera", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
