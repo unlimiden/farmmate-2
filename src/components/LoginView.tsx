@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ViewMode, Language, UserProfile } from '../types';
 import { translations } from '../data/translations';
 import { Bug, Lock, Mail, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { getApiUrl } from '../lib/api';
 
 interface LoginViewProps {
   onNavigate: (view: ViewMode) => void;
@@ -16,18 +17,37 @@ export const LoginView: React.FC<LoginViewProps> = ({
 }) => {
   const t = translations[language];
   const [email, setEmail] = useState('farmer@example.com');
-  const [password, setPassword] = useState('password123');
+  const [password, setPassword] = useState('Test@1234');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    onLoginSuccess({
-      name: "Jonathan Reed",
-      email: email,
-      role: "Regional Supervisor",
-      district: "Northern District Farms",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200"
-    });
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(getApiUrl('/api/auth/login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        const mappedUser: UserProfile = {
+          ...data.user,
+          name: data.user.full_name,
+          district: `${data.user.county} County`
+        };
+        onLoginSuccess(mappedUser);
+      } else {
+        setError(data.message || (language === 'sw' ? 'Barua pepe au nenosiri si sahihi.' : 'Invalid email or password.'));
+      }
+    } catch (err) {
+      setError(language === 'sw' ? 'Hitilafu ya mtandao.' : 'Connection error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,6 +68,12 @@ export const LoginView: React.FC<LoginViewProps> = ({
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
+            {error && (
+              <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-xl leading-relaxed">
+                {error}
+              </div>
+            )}
+
             <div className="space-y-1">
               <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
                 {t.emailAddress}
@@ -101,10 +127,11 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 py-3 bg-[#14532d] text-white rounded-xl text-sm font-semibold hover:bg-[#0f4023] shadow-md transition-all mt-2"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 py-3 bg-[#14532d] text-white rounded-xl text-sm font-semibold hover:bg-[#0f4023] shadow-md transition-all mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>{t.login}</span>
-              <ArrowRight className="w-4 h-4" />
+              <span>{loading ? (language === 'sw' ? 'Inaingia...' : 'Logging in...') : t.login}</span>
+              {!loading && <ArrowRight className="w-4 h-4" />}
             </button>
           </form>
 

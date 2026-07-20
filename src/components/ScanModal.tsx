@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DiagnosisItem, Language } from '../types';
 import { translations } from '../data/translations';
 import { X, Upload, Database, Loader2, CheckCircle2 } from 'lucide-react';
+import { getApiUrl } from '../lib/api';
 
 interface ScanModalProps {
   isOpen: boolean;
@@ -17,23 +18,63 @@ export const ScanModal: React.FC<ScanModalProps> = ({
   language,
 }) => {
   const t = translations[language];
-  const [cropType, setCropType] = useState('Tomato');
-  const [diseaseName, setDiseaseName] = useState('Late Blight');
-  const [status, setStatus] = useState<'Success' | 'Warning' | 'Critical'>('Warning');
-  const [treatment, setTreatment] = useState('Apply copper-based fungicide every 7-10 days and monitor soil moisture.');
+  const [cropsList, setCropsList] = useState<any[]>([]);
+  const [selectedCropId, setSelectedCropId] = useState<number>(1);
+  const [diseasesList, setDiseasesList] = useState<any[]>([]);
+  const [selectedDiseaseId, setSelectedDiseaseId] = useState<number>(1);
   const [notes, setNotes] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  if (!isOpen) return null;
-
-  // Preset sample crop images for quick testing
+  // Preset sample crop images for quick testing, mapped to our relational DB structure
   const sampleImages = [
-    { name: "Tomato Blight", url: "https://images.unsplash.com/photo-1592841200221-a6898f307baa?auto=format&fit=crop&q=80&w=300", crop: "Tomato", disease: "Late Blight", status: "Warning" as const },
-    { name: "Wheat Healthy", url: "https://images.unsplash.com/photo-1574943320219-553eb213f72d?auto=format&fit=crop&q=80&w=300", crop: "Wheat", disease: "Healthy", status: "Success" as const },
-    { name: "Corn Rust", url: "https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&q=80&w=300", crop: "Corn", disease: "Common Rust", status: "Warning" as const },
-    { name: "Potato Canopy", url: "https://images.unsplash.com/photo-1518977676601-b5ff321035b3?auto=format&fit=crop&q=80&w=300", crop: "Potato", disease: "Healthy", status: "Success" as const }
+    { name: "Maize GLS", url: "https://images.unsplash.com/photo-1574943320219-553eb213f72d?auto=format&fit=crop&q=80&w=300", crop_id: 1, disease_id: 2 },
+    { name: "Potato Late Blight", url: "https://images.unsplash.com/photo-1518977676601-b5ff321035b3?auto=format&fit=crop&q=80&w=300", crop_id: 4, disease_id: 10 },
+    { name: "Tomato Late Blight", url: "https://images.unsplash.com/photo-1592841200221-a6898f307baa?auto=format&fit=crop&q=80&w=300", crop_id: 3, disease_id: 7 },
+    { name: "Kale Black Rot", url: "https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&q=80&w=300", crop_id: 7, disease_id: 21 }
   ];
+
+  // Load Crops
+  useEffect(() => {
+    if (isOpen) {
+      fetch(getApiUrl('/api/crops'))
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.crops) {
+            setCropsList(data.crops);
+            if (data.crops.length > 0) {
+              setSelectedCropId(data.crops[0].crop_id);
+            }
+          }
+        })
+        .catch(err => console.error("Error loading crops list from DB:", err));
+    }
+  }, [isOpen]);
+
+  // Load Diseases associated with the selected crop
+  useEffect(() => {
+    if (isOpen && selectedCropId) {
+      fetch(getApiUrl(`/api/diseases/crop/${selectedCropId}`))
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.diseases) {
+            setDiseasesList(data.diseases);
+            if (data.diseases.length > 0) {
+              // Try to find if we selected a sample image that has a specific disease
+              const matchingSample = sampleImages.find(s => s.url === selectedImage && s.crop_id === selectedCropId);
+              if (matchingSample && data.diseases.some((d: any) => d.disease_id === matchingSample.disease_id)) {
+                setSelectedDiseaseId(matchingSample.disease_id);
+              } else {
+                setSelectedDiseaseId(data.diseases[0].disease_id);
+              }
+            }
+          }
+        })
+        .catch(err => console.error("Error loading diseases for crop:", err));
+    }
+  }, [isOpen, selectedCropId, selectedImage]);
+
+  if (!isOpen) return null;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -46,34 +87,44 @@ export const ScanModal: React.FC<ScanModalProps> = ({
     }
   };
 
-  const handleSaveRecord = () => {
+  const handleSaveRecord = async () => {
     if (!selectedImage) {
       alert(language === 'sw' ? 'Tafadhali pakia au chagua picha ya zao.' : 'Please upload or select a crop image first.');
       return;
     }
 
     setLoading(true);
-    setTimeout(() => {
-      const newDiag: DiagnosisItem = {
-        id: `rec-${Date.now()}`,
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        crop: cropType,
-        image: selectedImage,
-        disease: diseaseName,
-        status: status,
-        confidence: 99.4,
-        treatment: treatment || "Maintain standard agricultural monitoring and approved soil nutrients.",
-        symptoms: [notes || "Observed during routine field inspection."],
-      };
-      onDiagnosisComplete(newDiag);
+    try {
+      const response = await fetch(getApiUrl('/api/history'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          crop_id: selectedCropId,
+          disease_id: selectedDiseaseId,
+          image: selectedImage,
+          notes: notes || "Inspected and updated via inspection wizard."
+        })
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        onDiagnosisComplete(data.record);
+        // Reset state
+        setNotes('');
+        setSelectedImage(null);
+        onClose();
+      } else {
+        alert(language === 'sw' ? 'Mchakato umeshindikana: ' + data.message : 'Error saving record: ' + data.message);
+      }
+    } catch (err) {
+      alert(language === 'sw' ? 'Hitilafu ya mtandao wakati wa kuhifadhi.' : 'Network error saving record to database.');
+    } finally {
       setLoading(false);
-      onClose();
-    }, 600);
+    }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
-      <div className="bg-white border border-[#e2ebd4] rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative space-y-6">
+      <div className="bg-white border border-[#e2ebd4] rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative space-y-6 my-8 max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
           className="absolute right-5 top-5 p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
@@ -90,7 +141,7 @@ export const ScanModal: React.FC<ScanModalProps> = ({
               {language === 'sw' ? 'Ongeza Rekodi ya Ukaguzi' : 'Add Inspection Record'}
             </h3>
             <p className="text-xs text-gray-500">
-              {language === 'sw' ? 'Hifadhi rekodi mpya kwenye hifadhidata ya kilimo' : 'Save new record to centralized agricultural database'}
+              {language === 'sw' ? 'Hifadhi rekodi kwenye hifadhidata ya kilimo (Mstari Salama)' : 'Save record directly to SQL agricultural database'}
             </p>
           </div>
         </div>
@@ -102,48 +153,37 @@ export const ScanModal: React.FC<ScanModalProps> = ({
                 {language === 'sw' ? 'Aina ya Zao' : 'Crop Type'}
               </label>
               <select
-                value={cropType}
-                onChange={(e) => setCropType(e.target.value)}
+                value={selectedCropId}
+                onChange={(e) => setSelectedCropId(parseInt(e.target.value))}
                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#14532d]"
               >
-                <option value="Tomato">Tomato</option>
-                <option value="Wheat">Wheat</option>
-                <option value="Corn">Corn</option>
-                <option value="Potato">Potato</option>
-                <option value="Coffee">Coffee</option>
-                <option value="Banana">Banana</option>
-                <option value="Rice">Rice</option>
-                <option value="Tea">Tea</option>
+                {cropsList.map((crop) => (
+                  <option key={crop.crop_id} value={crop.crop_id}>
+                    {crop.crop_name} {crop.scientific_name ? `(${crop.scientific_name})` : ''}
+                  </option>
+                ))}
               </select>
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                {language === 'sw' ? 'Hali ya Afya' : 'Health Status'}
+                {language === 'sw' ? 'Ugonjwa / Hali' : 'Disease / Condition'}
               </label>
               <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as any)}
+                value={selectedDiseaseId}
+                onChange={(e) => setSelectedDiseaseId(parseInt(e.target.value))}
                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#14532d]"
               >
-                <option value="Success">Success (Healthy)</option>
-                <option value="Warning">Warning (Mild/Moderate)</option>
-                <option value="Critical">Critical (Severe Disease)</option>
+                {diseasesList.map((disease) => (
+                  <option key={disease.disease_id} value={disease.disease_id}>
+                    {disease.disease_name}
+                  </option>
+                ))}
+                {diseasesList.length === 0 && (
+                  <option value="">{language === 'sw' ? 'Inapakia...' : 'No diseases configured'}</option>
+                )}
               </select>
             </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
-              {language === 'sw' ? 'Ugonjwa au Hali' : 'Disease / Condition Name'}
-            </label>
-            <input
-              type="text"
-              value={diseaseName}
-              onChange={(e) => setDiseaseName(e.target.value)}
-              placeholder="e.g. Late Blight, Healthy, Rust..."
-              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#14532d]"
-            />
           </div>
 
           <div className="space-y-1.5">
@@ -195,9 +235,8 @@ export const ScanModal: React.FC<ScanModalProps> = ({
                   type="button"
                   onClick={() => {
                     setSelectedImage(sample.url);
-                    setCropType(sample.crop);
-                    setDiseaseName(sample.disease);
-                    setStatus(sample.status);
+                    setSelectedCropId(sample.crop_id);
+                    // Diseases list will automatically reload for this crop type
                   }}
                   className={`flex items-center gap-2 p-2 rounded-xl border text-left text-xs font-medium transition-all ${
                     selectedImage === sample.url
@@ -214,13 +253,13 @@ export const ScanModal: React.FC<ScanModalProps> = ({
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
-              {language === 'sw' ? 'Maelezo ya Matibabu' : 'Treatment Protocol'}
+              {language === 'sw' ? 'Maelezo ya Ziada' : 'Inspection Notes'}
             </label>
             <input
               type="text"
-              value={treatment}
-              onChange={(e) => setTreatment(e.target.value)}
-              placeholder="Treatment instructions..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder={language === 'sw' ? 'Mfano: Madoa ya njano kwenye majani ya chini...' : 'e.g. Leaf spot detected on lower canopy leaves...'}
               className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#14532d]"
             />
           </div>

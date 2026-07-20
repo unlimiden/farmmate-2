@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ViewMode, Language, UserProfile, DiagnosisItem } from './types';
-import { mockDiagnoses, mockUserProfile } from './data/mockData';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { HomeView } from './components/HomeView';
@@ -12,14 +11,76 @@ import { LoginView } from './components/LoginView';
 import { RegisterView } from './components/RegisterView';
 import { ScanModal } from './components/ScanModal';
 import { DiagnosisDetailModal } from './components/DiagnosisDetailModal';
+import { getApiUrl } from './lib/api';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewMode>('home');
   const [language, setLanguage] = useState<Language>('en');
-  const [user, setUser] = useState<UserProfile | null>(mockUserProfile);
-  const [diagnoses, setDiagnoses] = useState<DiagnosisItem[]>(mockDiagnoses);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [diagnoses, setDiagnoses] = useState<DiagnosisItem[]>([]);
   const [isScanModalOpen, setIsScanModalOpen] = useState(false);
   const [selectedDiagnosis, setSelectedDiagnosis] = useState<DiagnosisItem | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load profile and history on mount
+  useEffect(() => {
+    async function loadInitialData() {
+      try {
+        const profileRes = await fetch(getApiUrl('/api/users/profile'));
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          if (profileData.success && profileData.user) {
+            const mappedUser: UserProfile = {
+              ...profileData.user,
+              name: profileData.user.full_name,
+              district: `${profileData.user.county} County`
+            };
+            setUser(mappedUser);
+            // After successful profile, load history
+            fetchHistory();
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching initial profile", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadInitialData();
+  }, []);
+
+  const fetchHistory = async () => {
+    try {
+      const res = await fetch(getApiUrl('/api/history/me'));
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.history) {
+          setDiagnoses(data.history);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching history", err);
+    }
+  };
+
+  const fetchProfile = async () => {
+    try {
+      const profileRes = await fetch(getApiUrl('/api/users/profile'));
+      if (profileRes.ok) {
+        const profileData = await profileRes.json();
+        if (profileData.success && profileData.user) {
+          const mappedUser: UserProfile = {
+            ...profileData.user,
+            name: profileData.user.full_name,
+            district: `${profileData.user.county} County`
+          };
+          setUser(mappedUser);
+        }
+      }
+    } catch (err) {
+      console.error("Error refreshing profile", err);
+    }
+  };
 
   const handleNavigate = (view: ViewMode) => {
     setCurrentView(view);
@@ -28,11 +89,18 @@ export default function App() {
 
   const handleLoginSuccess = (loggedInUser: UserProfile) => {
     setUser(loggedInUser);
+    fetchHistory();
     setCurrentView('dashboard');
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch(getApiUrl('/api/auth/logout'), { method: 'POST' });
+    } catch (err) {
+      console.error("Logout error", err);
+    }
     setUser(null);
+    setDiagnoses([]);
     setCurrentView('home');
   };
 
@@ -43,7 +111,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#f8fbef] text-gray-900 flex flex-col justify-between font-sans selection:bg-[#14532d] selection:text-white">
-      {/* Navigation Bar (hidden on dedicated auth full-screens if desired, but user screenshots show top navbar across landing/dashboard and language selector on auth screens) */}
+      {/* Navigation Bar */}
       {currentView !== 'login' && currentView !== 'register' && (
         <Navbar
           currentView={currentView}
@@ -87,7 +155,11 @@ export default function App() {
           />
         )}
         {currentView === 'contact' && (
-          <ContactView onNavigate={handleNavigate} language={language} />
+          <ContactView 
+            onNavigate={handleNavigate} 
+            language={language} 
+            currentUser={user}
+          />
         )}
         {currentView === 'about' && (
           <AboutView onNavigate={handleNavigate} language={language} />

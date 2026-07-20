@@ -16,9 +16,15 @@ export interface DiagnosisItem {
 }
 
 export interface UserProfile {
-  name: string;
+  user_id?: number;
+  full_name: string;
+  name: string; // compatibility with user.name
   email: string;
   role: string;
-  district: string;
+  phone: string;
+  county: string;
+  district: string; // compatibility with user.district
+  preferred_language: string;
+  primary_crops_grown: string;
   avatar: string;
 }

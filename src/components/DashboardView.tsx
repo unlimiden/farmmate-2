@@ -56,10 +56,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="bg-white border-l-4 border-l-[#14532d] border border-[#e2ebd4] rounded-xl p-5 shadow-xs space-y-2">
           <p className="text-xs font-bold uppercase tracking-wider text-gray-500">{t.totalDiagnoses}</p>
           <div className="flex items-baseline justify-between">
-            <h3 className="text-3xl font-extrabold text-gray-900">1,248</h3>
+            <h3 className="text-3xl font-extrabold text-gray-900">{diagnoses.length}</h3>
             <span className="flex items-center text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
               <TrendingUp className="w-3 h-3 mr-1" />
-              12% vs last month
+              Active Database Records
             </span>
           </div>
         </div>
@@ -68,8 +68,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="bg-white border-l-4 border-l-[#16a34a] border border-[#e2ebd4] rounded-xl p-5 shadow-xs space-y-2">
           <p className="text-xs font-bold uppercase tracking-wider text-gray-500">{t.healthyCrops}</p>
           <div className="flex items-baseline justify-between">
-            <h3 className="text-3xl font-extrabold text-[#16a34a]">982</h3>
-            <span className="text-xs font-medium text-gray-500">78.6% of total scans</span>
+            <h3 className="text-3xl font-extrabold text-[#16a34a]">
+              {diagnoses.filter(d => d.status === 'Success').length}
+            </h3>
+            <span className="text-xs font-medium text-gray-500">
+              {diagnoses.length > 0
+                ? ((diagnoses.filter(d => d.status === 'Success').length / diagnoses.length) * 100).toFixed(1)
+                : 0}% of total scans
+            </span>
           </div>
         </div>
 
@@ -77,10 +83,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="bg-white border-l-4 border-l-amber-600 border border-[#e2ebd4] rounded-xl p-5 shadow-xs space-y-2">
           <p className="text-xs font-bold uppercase tracking-wider text-gray-500">{t.diseasedCrops}</p>
           <div className="flex items-baseline justify-between">
-            <h3 className="text-3xl font-extrabold text-amber-700">266</h3>
+            <h3 className="text-3xl font-extrabold text-amber-700">
+              {diagnoses.filter(d => d.status !== 'Success').length}
+            </h3>
             <span className="flex items-center text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
               <AlertTriangle className="w-3 h-3 mr-1" />
-              Action required
+              {diagnoses.filter(d => d.status !== 'Success').length > 0 ? 'Action required' : 'All clear'}
             </span>
           </div>
         </div>
@@ -89,8 +97,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="bg-white border-l-4 border-l-[#7c2d12] border border-[#e2ebd4] rounded-xl p-5 shadow-xs space-y-2">
           <p className="text-xs font-bold uppercase tracking-wider text-gray-500">{t.treatmentsViewed}</p>
           <div className="flex items-baseline justify-between">
-            <h3 className="text-3xl font-extrabold text-[#7c2d12]">412</h3>
-            <span className="text-xs font-medium text-gray-500">Across 12 crop types</span>
+            <h3 className="text-3xl font-extrabold text-[#7c2d12]">
+              {diagnoses.filter(d => d.status !== 'Success' && d.treatment).length}
+            </h3>
+            <span className="text-xs font-medium text-gray-500">
+              Across {new Set(diagnoses.map(d => d.crop)).size} crop types
+            </span>
           </div>
         </div>
       </div>

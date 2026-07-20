@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ViewMode, Language, UserProfile } from '../types';
 import { translations } from '../data/translations';
 import { Lock, Mail, User, Phone, Eye, EyeOff, ShieldCheck, Cpu, ArrowRight } from 'lucide-react';
+import { getApiUrl } from '../lib/api';
 
 interface RegisterViewProps {
   onNavigate: (view: ViewMode) => void;
@@ -16,25 +17,57 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
 }) => {
   const t = translations[language];
   const [fullName, setFullName] = useState('Johnathan Appleseed');
-  const [email, setEmail] = useState('farmer@example.com');
-  const [phone, setPhone] = useState('+1 (555) 000-0000');
-  const [password, setPassword] = useState('password123');
-  const [confirmPassword, setConfirmPassword] = useState('password123');
+  const [email, setEmail] = useState('newfarmer@example.com');
+  const [phone, setPhone] = useState('+254 700 111 222');
+  const [password, setPassword] = useState('Test@1234');
+  const [confirmPassword, setConfirmPassword] = useState('Test@1234');
   const [showPassword, setShowPassword] = useState(false);
+  const [role, setRole] = useState('Farmer');
+  const [county, setCounty] = useState('Kiambu');
+  const [primaryCropsGrown, setPrimaryCropsGrown] = useState('Maize, Beans');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      alert("Passwords do not match.");
+      setError(language === 'sw' ? 'Nenosiri hailingani.' : 'Passwords do not match.');
       return;
     }
-    onRegisterSuccess({
-      name: fullName,
-      email: email,
-      role: "Agricultural Land Steward",
-      district: "Local District Farms",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200"
-    });
+
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(getApiUrl('/api/auth/register'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: fullName,
+          email,
+          phone,
+          role,
+          county,
+          preferred_language: language === 'sw' ? 'Kiswahili' : 'English',
+          primary_crops_grown: primaryCropsGrown,
+          password
+        })
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        const mappedUser: UserProfile = {
+          ...data.user,
+          name: data.user.full_name,
+          district: `${data.user.county} County`
+        };
+        onRegisterSuccess(mappedUser);
+      } else {
+        setError(data.message || (language === 'sw' ? 'Sajili imeshindikana.' : 'Registration failed. Please try again.'));
+      }
+    } catch (err) {
+      setError(language === 'sw' ? 'Hitilafu ya mtandao.' : 'Connection error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -103,10 +136,66 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+1 (555) 000-0000"
+                  placeholder="+254 700 111 222"
                   className="w-full pl-10 pr-4 py-2.5 bg-[#fcfdfa] border border-[#d8e5c4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#14532d]"
                 />
               </div>
+            </div>
+
+            {error && (
+              <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-xl leading-relaxed">
+                {error}
+              </div>
+            )}
+
+            {/* Custom Database Fields */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  {language === 'sw' ? 'Jukumu' : 'Role'}
+                </label>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-[#fcfdfa] border border-[#d8e5c4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#14532d]"
+                >
+                  <option value="Farmer">{language === 'sw' ? 'Mkulima' : 'Farmer'}</option>
+                  <option value="Agricultural Officer">{language === 'sw' ? 'Afisa wa Kilimo' : 'Agricultural Officer'}</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  {language === 'sw' ? 'Kaunti' : 'County'}
+                </label>
+                <select
+                  value={county}
+                  onChange={(e) => setCounty(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-[#fcfdfa] border border-[#d8e5c4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#14532d]"
+                >
+                  <option value="Kiambu">Kiambu</option>
+                  <option value="Nyandarua">Nyandarua</option>
+                  <option value="Kilifi">Kilifi</option>
+                  <option value="Murang'a">Murang'a</option>
+                  <option value="Kisumu">Kisumu</option>
+                  <option value="Uasin Gishu">Uasin Gishu</option>
+                  <option value="Nakuru">Nakuru</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                {language === 'sw' ? 'Mazao Makuu Unayokuza' : 'Primary Crops Grown'}
+              </label>
+              <input
+                type="text"
+                required
+                value={primaryCropsGrown}
+                onChange={(e) => setPrimaryCropsGrown(e.target.value)}
+                placeholder="e.g. Maize, Beans, Potato"
+                className="w-full px-4 py-2.5 bg-[#fcfdfa] border border-[#d8e5c4] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#14532d]"
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -154,10 +243,11 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
 
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#14532d] text-white rounded-xl text-sm font-semibold hover:bg-[#0f4023] shadow-md transition-all mt-4"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#14532d] text-white rounded-xl text-sm font-semibold hover:bg-[#0f4023] shadow-md transition-all mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>{t.registerAccount}</span>
-              <ArrowRight className="w-4 h-4" />
+              <span>{loading ? (language === 'sw' ? 'Inasajili...' : 'Registering...') : t.registerAccount}</span>
+              {!loading && <ArrowRight className="w-4 h-4" />}
             </button>
           </form>
 
