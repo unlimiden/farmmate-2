@@ -11,6 +11,8 @@ import { LoginView } from './components/LoginView';
 import { RegisterView } from './components/RegisterView';
 import { ScanModal } from './components/ScanModal';
 import { DiagnosisDetailModal } from './components/DiagnosisDetailModal';
+import { SymptomsView } from './components/SymptomsView';
+import { ChatbotView } from './components/ChatbotView';
 import { getApiUrl } from './lib/api';
 
 export default function App() {
@@ -163,6 +165,12 @@ export default function App() {
         )}
         {currentView === 'about' && (
           <AboutView onNavigate={handleNavigate} language={language} />
+        )}
+        {currentView === 'symptoms' && (
+          <SymptomsView onNavigate={handleNavigate} language={language} />
+        )}
+        {currentView === 'chatbot' && (
+          <ChatbotView onNavigate={handleNavigate} language={language} user={user} />
         )}
         {currentView === 'login' && (
           <LoginView

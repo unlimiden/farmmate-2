@@ -77,6 +77,28 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
 
           <button
+            onClick={() => onNavigate('symptoms')}
+            className={`transition-colors hover:text-[#14532d] ${
+              currentView === 'symptoms'
+                ? 'text-[#14532d] font-semibold border-b-2 border-[#14532d] pb-0.5'
+                : ''
+            }`}
+          >
+            {t.symptomsGuide}
+          </button>
+
+          <button
+            onClick={() => onNavigate('chatbot')}
+            className={`transition-colors hover:text-[#14532d] ${
+              currentView === 'chatbot'
+                ? 'text-[#14532d] font-semibold border-b-2 border-[#14532d] pb-0.5'
+                : ''
+            }`}
+          >
+            {t.aiAssistant}
+          </button>
+
+          <button
             onClick={() => onNavigate('contact')}
             className={`transition-colors hover:text-[#14532d] ${
               currentView === 'contact'

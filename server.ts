@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import cors from "cors";
+import { GoogleGenAI } from "@google/genai";
 
 // Initialize Firebase Admin DB and Seeder
 import { db } from "./src/lib/firebase.js";
@@ -279,6 +280,64 @@ app.get("/api/diseases/crop/:cropId", async (req, res) => {
   }
 });
 
+// GET /api/diseases/detailed
+app.get("/api/diseases/detailed", async (req, res) => {
+  try {
+    const snap = await db.collection('diseases').get();
+    const detailedDiseases = await Promise.all(snap.docs.map(async doc => {
+      const disease = doc.data();
+      const diseaseId = disease.disease_id || doc.id;
+      
+      const [symptomsSnap, treatmentsSnap, preventionsSnap] = await Promise.all([
+        db.collection('symptoms').where('disease_id', '==', diseaseId).get(),
+        db.collection('treatments').where('disease_id', '==', diseaseId).get(),
+        db.collection('preventions').where('disease_id', '==', diseaseId).get()
+      ]);
+      
+      return {
+        ...disease,
+        disease_id: diseaseId,
+        symptoms: symptomsSnap.docs.map(d => d.data()),
+        treatments: treatmentsSnap.docs.map(d => d.data()),
+        preventions: preventionsSnap.docs.map(d => d.data())
+      };
+    }));
+    res.json({ success: true, diseases: detailedDiseases });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/diseases/crop/:cropId/detailed
+app.get("/api/diseases/crop/:cropId/detailed", async (req, res) => {
+  try {
+    const cropId = normalizeCropId(req.params.cropId);
+    const snap = await db.collection('diseases').where('crop_id', '==', cropId).get();
+    
+    const detailedDiseases = await Promise.all(snap.docs.map(async doc => {
+      const disease = doc.data();
+      const diseaseId = disease.disease_id || doc.id;
+      
+      const [symptomsSnap, treatmentsSnap, preventionsSnap] = await Promise.all([
+        db.collection('symptoms').where('disease_id', '==', diseaseId).get(),
+        db.collection('treatments').where('disease_id', '==', diseaseId).get(),
+        db.collection('preventions').where('disease_id', '==', diseaseId).get()
+      ]);
+      
+      return {
+        ...disease,
+        disease_id: diseaseId,
+        symptoms: symptomsSnap.docs.map(d => d.data()),
+        treatments: treatmentsSnap.docs.map(d => d.data()),
+        preventions: preventionsSnap.docs.map(d => d.data())
+      };
+    }));
+    res.json({ success: true, diseases: detailedDiseases });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // GET /api/diseases/:diseaseId
 app.get("/api/diseases/:diseaseId", async (req, res) => {
   try {
@@ -475,6 +534,115 @@ app.put("/api/users/profile", async (req, res) => {
     res.json({ success: true, user: currentUserSession });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Lazy initialize Gemini client
+let aiClient: any = null;
+function getGeminiClient() {
+  if (!aiClient) {
+    const key = process.env.GEMINI_API_KEY;
+    if (!key) {
+      throw new Error("GEMINI_API_KEY environment variable is required but was not found.");
+    }
+    aiClient = new GoogleGenAI({
+      apiKey: key,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
+    });
+  }
+  return aiClient;
+}
+
+// POST /api/chatbot/chat
+app.post("/api/chatbot/chat", async (req, res) => {
+  const { messages } = req.body;
+  if (!messages || !Array.isArray(messages)) {
+    return res.status(400).json({ success: false, message: "Invalid or missing messages array." });
+  }
+
+  try {
+    const ai = getGeminiClient();
+
+    // Fetch user details
+    const user = currentUserSession || {
+      full_name: "Farmer",
+      role: "Farmer",
+      county: "Uasin Gishu",
+      preferred_language: "English",
+      primary_crops_grown: "Maize, Potatoes"
+    };
+
+    // Fetch some context from Firestore if possible to ground the AI model
+    let diseaseContext = "";
+    try {
+      const diseasesSnap = await db.collection('diseases').get();
+      const cropDocs = diseasesSnap.docs.map(d => d.data());
+      diseaseContext = cropDocs.map(c => `- ${c.disease_name} (Crop: ${c.crop_name}): ${c.description || ''}`).join("\n");
+    } catch (e) {
+      console.error("Error fetching diseases for chat grounding:", e);
+    }
+
+    // Fetch user diagnostic history
+    let historyContext = "";
+    try {
+      const userId = user.user_id || "U010";
+      const historySnap = await db.collection('history').where('user_id', '==', userId).get();
+      if (!historySnap.empty) {
+        const records = historySnap.docs.map(doc => doc.data());
+        const enriched = await Promise.all(records.map(enrichHistoryRecord));
+        historyContext = enriched.map(h => `- Detected ${h.disease} on ${h.crop} on ${h.date}. Status: ${h.status}. Notes: ${h.notes || 'None'}`).join("\n");
+      }
+    } catch (e) {
+      console.error("Error fetching user history for chat grounding:", e);
+    }
+
+    // Build system instruction
+    const systemInstruction = `You are FarmMate AI, an elite agricultural consultant and smart crop disease expert in Kenya.
+Your goal is to provide highly practical, expert-level advice on crop symptoms, prevention, treatment, and general husbandry.
+
+Information about the currently logged-in user:
+- Name: ${user.full_name}
+- Role: ${user.role} (Farmer, Extension Officer, or Admin)
+- County: ${user.county}
+- Preferred Language: ${user.preferred_language || 'English'}
+- Primary Crops Grown: ${user.primary_crops_grown || 'N/A'}
+
+${historyContext ? `\nThe user's history of diagnosed crop conditions is:\n${historyContext}` : ''}
+
+Here are some diseases and details available in the local FarmMate database for reference:
+${diseaseContext || 'No details available'}
+
+Guidelines:
+1. Always be polite, warm, and highly practical.
+2. Format your output with clear, beautiful markdown (headings, bold text, bullet points).
+3. If the user's preferred language is Swahili (or if they ask in Swahili), feel free to reply in Swahili or offer a bilingual response.
+4. Keep treatment advice realistic and appropriate for East African / Kenyan smallholder farming (mentioning both organic/cultural practices and chemical options where suitable).
+5. Ground your diagnostic suggestions in the local diseases context above whenever possible.
+6. If the crop query is complex, suggest they use the "Consult Officer" feature in FarmMate to reach out to an extension officer in ${user.county} County.`;
+
+    // Format chat contents for the generateContent API
+    const contents = messages.map((m: any) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content || m.text || "" }]
+    }));
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: contents,
+      config: {
+        systemInstruction: systemInstruction,
+        temperature: 0.7,
+      }
+    });
+
+    res.json({ success: true, text: response.text });
+  } catch (err: any) {
+    console.error("Gemini API Error in chatbot route:", err);
+    res.status(500).json({ success: false, message: err.message || "An error occurred with the AI model." });
   }
 });
 

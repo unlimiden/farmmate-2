@@ -22,6 +22,35 @@ export const LoginView: React.FC<LoginViewProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const handlePersonaSelect = async (personaEmail: string) => {
+    setEmail(personaEmail);
+    setPassword('Test@1234');
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(getApiUrl('/api/auth/login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: personaEmail, password: 'Test@1234' })
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        const mappedUser: UserProfile = {
+          ...data.user,
+          name: data.user.full_name,
+          district: `${data.user.county} County`
+        };
+        onLoginSuccess(mappedUser);
+      } else {
+        setError(data.message || (language === 'sw' ? 'Barua pepe au nenosiri si sahihi.' : 'Invalid email or password.'));
+      }
+    } catch (err) {
+      setError(language === 'sw' ? 'Hitilafu ya mtandao.' : 'Connection error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -65,6 +94,47 @@ export const LoginView: React.FC<LoginViewProps> = ({
           <div className="text-center space-y-1">
             <h2 className="text-2xl font-extrabold text-gray-900">{t.welcomeBack}</h2>
             <p className="text-xs text-gray-500 font-medium">{t.continueManaging}</p>
+          </div>
+
+          {/* Quick Login Testing Personas */}
+          <div className="p-4 bg-[#fcfdfa] border border-[#d8e5c4] rounded-2xl space-y-3 shadow-xs">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">
+              {language === 'sw' ? 'WASIFU WA MAJARIBIO (BONYEZA KUINGIA HARAKA)' : 'TESTING PERSONAS (CLICK TO LOG IN INSTANTLY)'}
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => handlePersonaSelect('farmer@example.com')}
+                disabled={loading}
+                className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-[#e2ebd4] bg-white hover:border-[#14532d] hover:bg-[#fcfdfa] text-center transition-all group"
+              >
+                <span className="text-lg">👩‍🌾</span>
+                <span className="text-[10px] font-extrabold text-gray-800 mt-1">{language === 'sw' ? 'Mkulima' : 'Farmer'}</span>
+                <span className="text-[8px] text-gray-400 font-semibold truncate w-full group-hover:text-[#14532d] mt-0.5">Test Mwangi</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => handlePersonaSelect('james.karanja@kilimo.go.ke')}
+                disabled={loading}
+                className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-[#e2ebd4] bg-white hover:border-[#14532d] hover:bg-[#fcfdfa] text-center transition-all group"
+              >
+                <span className="text-lg">👔</span>
+                <span className="text-[10px] font-extrabold text-gray-800 mt-1">{language === 'sw' ? 'Afisa' : 'Officer'}</span>
+                <span className="text-[8px] text-gray-400 font-semibold truncate w-full group-hover:text-[#14532d] mt-0.5">J. Karanja</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handlePersonaSelect('admin@farmmate.org')}
+                disabled={loading}
+                className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-[#e2ebd4] bg-white hover:border-[#14532d] hover:bg-[#fcfdfa] text-center transition-all group"
+              >
+                <span className="text-lg">🛡️</span>
+                <span className="text-[10px] font-extrabold text-gray-800 mt-1">{language === 'sw' ? 'Msimamizi' : 'Admin'}</span>
+                <span className="text-[8px] text-gray-400 font-semibold truncate w-full group-hover:text-[#14532d] mt-0.5">Admin User</span>
+              </button>
+            </div>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">

@@ -1,4 +1,4 @@
-export type ViewMode = 'home' | 'dashboard' | 'history' | 'contact' | 'about' | 'login' | 'register';
+export type ViewMode = 'home' | 'dashboard' | 'history' | 'contact' | 'about' | 'login' | 'register' | 'symptoms' | 'chatbot';
 
 export type Language = 'en' | 'sw';
 
