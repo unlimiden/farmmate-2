@@ -33,7 +33,16 @@ export const LoginView: React.FC<LoginViewProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: personaEmail, password: 'Test@1234' })
       });
-      const data = await response.json();
+      
+      const contentType = response.headers.get("content-type");
+      let data;
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        const textVal = await response.text();
+        throw new Error(`Server returned non-JSON response (${response.status}): ${textVal.substring(0, 150)}`);
+      }
+
       if (response.ok && data.success) {
         const mappedUser: UserProfile = {
           ...data.user,
@@ -45,6 +54,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
         setError(data.message || (language === 'sw' ? 'Barua pepe au nenosiri si sahihi.' : 'Invalid email or password.'));
       }
     } catch (err) {
+      console.error("Persona login error:", err);
       setError(language === 'sw' ? 'Hitilafu ya mtandao.' : 'Connection error. Please try again.');
     } finally {
       setLoading(false);
@@ -61,7 +71,16 @@ export const LoginView: React.FC<LoginViewProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      const data = await response.json();
+
+      const contentType = response.headers.get("content-type");
+      let data;
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        const textVal = await response.text();
+        throw new Error(`Server returned non-JSON response (${response.status}): ${textVal.substring(0, 150)}`);
+      }
+
       if (response.ok && data.success) {
         const mappedUser: UserProfile = {
           ...data.user,
@@ -73,6 +92,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
         setError(data.message || (language === 'sw' ? 'Barua pepe au nenosiri si sahihi.' : 'Invalid email or password.'));
       }
     } catch (err) {
+      console.error("Manual login error:", err);
       setError(language === 'sw' ? 'Hitilafu ya mtandao.' : 'Connection error. Please try again.');
     } finally {
       setLoading(false);

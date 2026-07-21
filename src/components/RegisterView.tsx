@@ -52,7 +52,16 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
           password
         })
       });
-      const data = await response.json();
+
+      const contentType = response.headers.get("content-type");
+      let data;
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        const textVal = await response.text();
+        throw new Error(`Server returned non-JSON response (${response.status}): ${textVal.substring(0, 150)}`);
+      }
+
       if (response.ok && data.success) {
         const mappedUser: UserProfile = {
           ...data.user,
@@ -64,6 +73,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
         setError(data.message || (language === 'sw' ? 'Sajili imeshindikana.' : 'Registration failed. Please try again.'));
       }
     } catch (err) {
+      console.error("Register error:", err);
       setError(language === 'sw' ? 'Hitilafu ya mtandao.' : 'Connection error. Please try again.');
     } finally {
       setLoading(false);
