@@ -13,12 +13,19 @@ import { ScanModal } from './components/ScanModal';
 import { DiagnosisDetailModal } from './components/DiagnosisDetailModal';
 import { SymptomsView } from './components/SymptomsView';
 import { ChatbotView } from './components/ChatbotView';
-import { getApiUrl } from './lib/api';
+import { fetchWithAuth } from './lib/api';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewMode>('home');
   const [language, setLanguage] = useState<Language>('en');
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    try {
+      const saved = localStorage.getItem('farmmate_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
   const [diagnoses, setDiagnoses] = useState<DiagnosisItem[]>([]);
   const [isScanModalOpen, setIsScanModalOpen] = useState(false);
   const [selectedDiagnosis, setSelectedDiagnosis] = useState<DiagnosisItem | null>(null);
@@ -28,7 +35,7 @@ export default function App() {
   useEffect(() => {
     async function loadInitialData() {
       try {
-        const profileRes = await fetch(getApiUrl('/api/users/profile'));
+        const profileRes = await fetchWithAuth('/api/users/profile');
         if (profileRes.ok) {
           const profileData = await profileRes.json();
           if (profileData.success && profileData.user) {
@@ -38,12 +45,22 @@ export default function App() {
               district: `${profileData.user.county} County`
             };
             setUser(mappedUser);
-            // After successful profile, load history
+            try {
+              localStorage.setItem('farmmate_user', JSON.stringify(mappedUser));
+            } catch (e) {
+              console.error("localStorage save error", e);
+            }
             fetchHistory();
           }
+        } else if (user) {
+          // Fallback fetch history with existing stored user
+          fetchHistory();
         }
       } catch (err) {
         console.error("Error fetching initial profile", err);
+        if (user) {
+          fetchHistory();
+        }
       } finally {
         setLoading(false);
       }
@@ -53,7 +70,7 @@ export default function App() {
 
   const fetchHistory = async () => {
     try {
-      const res = await fetch(getApiUrl('/api/history/me'));
+      const res = await fetchWithAuth('/api/history/me');
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.history) {
@@ -67,7 +84,7 @@ export default function App() {
 
   const fetchProfile = async () => {
     try {
-      const profileRes = await fetch(getApiUrl('/api/users/profile'));
+      const profileRes = await fetchWithAuth('/api/users/profile');
       if (profileRes.ok) {
         const profileData = await profileRes.json();
         if (profileData.success && profileData.user) {
@@ -77,6 +94,11 @@ export default function App() {
             district: `${profileData.user.county} County`
           };
           setUser(mappedUser);
+          try {
+            localStorage.setItem('farmmate_user', JSON.stringify(mappedUser));
+          } catch (e) {
+            console.error("localStorage save error", e);
+          }
         }
       }
     } catch (err) {
@@ -91,16 +113,22 @@ export default function App() {
 
   const handleLoginSuccess = (loggedInUser: UserProfile) => {
     setUser(loggedInUser);
+    try {
+      localStorage.setItem('farmmate_user', JSON.stringify(loggedInUser));
+    } catch (e) {
+      console.error("localStorage save error", e);
+    }
     fetchHistory();
     setCurrentView('dashboard');
   };
 
   const handleLogout = async () => {
     try {
-      await fetch(getApiUrl('/api/auth/logout'), { method: 'POST' });
+      await fetchWithAuth('/api/auth/logout', { method: 'POST' });
     } catch (err) {
       console.error("Logout error", err);
     }
+    localStorage.removeItem('farmmate_user');
     setUser(null);
     setDiagnoses([]);
     setCurrentView('home');

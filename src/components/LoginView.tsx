@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ViewMode, Language, UserProfile } from '../types';
 import { translations } from '../data/translations';
 import { Bug, Lock, Mail, Eye, EyeOff, ArrowRight } from 'lucide-react';
-import { getApiUrl } from '../lib/api';
+import { fetchWithAuth } from '../lib/api';
 
 interface LoginViewProps {
   onNavigate: (view: ViewMode) => void;
@@ -28,19 +28,20 @@ export const LoginView: React.FC<LoginViewProps> = ({
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(getApiUrl('/api/auth/login'), {
+      const response = await fetchWithAuth('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: personaEmail, password: 'Test@1234' })
       });
       
       const contentType = response.headers.get("content-type");
-      let data;
+      let data: any = {};
       if (contentType && contentType.includes("application/json")) {
         data = await response.json();
       } else {
         const textVal = await response.text();
-        throw new Error(`Server returned non-JSON response (${response.status}): ${textVal.substring(0, 150)}`);
+        console.error("Non-JSON login response:", response.status, textVal);
+        throw new Error(language === 'sw' ? 'Hitilafu ya server.' : 'Server response error.');
       }
 
       if (response.ok && data.success) {
@@ -53,9 +54,9 @@ export const LoginView: React.FC<LoginViewProps> = ({
       } else {
         setError(data.message || (language === 'sw' ? 'Barua pepe au nenosiri si sahihi.' : 'Invalid email or password.'));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Persona login error:", err);
-      setError(language === 'sw' ? 'Hitilafu ya mtandao.' : 'Connection error. Please try again.');
+      setError(err.message || (language === 'sw' ? 'Hitilafu ya mtandao.' : 'Connection error. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -66,19 +67,20 @@ export const LoginView: React.FC<LoginViewProps> = ({
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(getApiUrl('/api/auth/login'), {
+      const response = await fetchWithAuth('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
 
       const contentType = response.headers.get("content-type");
-      let data;
+      let data: any = {};
       if (contentType && contentType.includes("application/json")) {
         data = await response.json();
       } else {
         const textVal = await response.text();
-        throw new Error(`Server returned non-JSON response (${response.status}): ${textVal.substring(0, 150)}`);
+        console.error("Non-JSON login response:", response.status, textVal);
+        throw new Error(language === 'sw' ? 'Hitilafu ya server.' : 'Server response error.');
       }
 
       if (response.ok && data.success) {
@@ -91,9 +93,9 @@ export const LoginView: React.FC<LoginViewProps> = ({
       } else {
         setError(data.message || (language === 'sw' ? 'Barua pepe au nenosiri si sahihi.' : 'Invalid email or password.'));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Manual login error:", err);
-      setError(language === 'sw' ? 'Hitilafu ya mtandao.' : 'Connection error. Please try again.');
+      setError(err.message || (language === 'sw' ? 'Hitilafu ya mtandao.' : 'Connection error. Please try again.'));
     } finally {
       setLoading(false);
     }

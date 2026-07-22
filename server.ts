@@ -67,6 +67,28 @@ async function setupInitialSession() {
   }
 }
 
+// Request user resolver helper (checks X-User-Id header or falls back to server session)
+async function getReqUser(req: express.Request) {
+  const headerUserId = req.headers['x-user-id'] as string;
+  if (headerUserId) {
+    const userId = normalizeUserId(headerUserId);
+    try {
+      const snap = await db.collection('users').doc(userId).get();
+      if (snap.exists) {
+        const data = snap.data();
+        return {
+          ...data,
+          user_id: data?.user_id || snap.id,
+          phone: data?.phone_number || data?.phone || ""
+        };
+      }
+    } catch (e) {
+      console.error("Error fetching user by header ID:", e);
+    }
+  }
+  return currentUserSession;
+}
+
 // Helper to enrich history record with relational details from Firestore
 async function enrichHistoryRecord(record: any) {
   const cropId = normalizeCropId(record.crop_id);
@@ -131,7 +153,10 @@ app.post("/api/auth/register", async (req, res) => {
 
   try {
     const usersRef = db.collection('users');
-    const existsSnap = await usersRef.where('email', '==', email.toLowerCase()).get();
+    const cleanEmail = String(email).trim().toLowerCase();
+
+    // Check if user with email exists
+    const existsSnap = await usersRef.where('email', '==', cleanEmail).get();
     if (!existsSnap.empty) {
       return res.status(400).json({ success: false, message: "A user with this email already exists." });
     }
@@ -142,7 +167,7 @@ app.post("/api/auth/register", async (req, res) => {
     const newUser = {
       user_id: nextId,
       full_name,
-      email: email.toLowerCase(),
+      email: cleanEmail,
       role: role || "Farmer",
       phone_number: phone || "+254 700 000 000",
       phone: phone || "+254 700 000 000",
@@ -158,7 +183,8 @@ app.post("/api/auth/register", async (req, res) => {
     currentUserSession = newUser;
     res.json({ success: true, user: newUser });
   } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error("Register error:", err);
+    res.status(500).json({ success: false, message: err.message || "Registration failed." });
   }
 });
 
@@ -170,17 +196,35 @@ app.post("/api/auth/login", async (req, res) => {
   }
 
   try {
+    const cleanEmail = String(email).trim().toLowerCase();
+
+    // Query by email alone to avoid requiring Firestore composite indexes
     const usersSnap = await db.collection('users')
-      .where('email', '==', email.toLowerCase())
-      .where('password', '==', password)
+      .where('email', '==', cleanEmail)
       .get();
 
-    if (usersSnap.empty) {
+    let userDoc = usersSnap.empty ? null : usersSnap.docs[0];
+
+    // Case-insensitive fallback if exact email equality query didn't match
+    if (!userDoc) {
+      const allUsersSnap = await db.collection('users').get();
+      userDoc = allUsersSnap.docs.find(d => {
+        const dEmail = String(d.data().email || '').trim().toLowerCase();
+        return dEmail === cleanEmail;
+      }) || null;
+    }
+
+    if (!userDoc) {
       return res.status(401).json({ success: false, message: "Invalid email or password." });
     }
 
-    const userDoc = usersSnap.docs[0];
     const userData = userDoc.data();
+
+    // Check password
+    if (userData.password && userData.password !== password) {
+      return res.status(401).json({ success: false, message: "Invalid email or password." });
+    }
+
     const user = {
       ...userData,
       user_id: userData.user_id || userDoc.id,
@@ -190,7 +234,8 @@ app.post("/api/auth/login", async (req, res) => {
     currentUserSession = user;
     res.json({ success: true, user });
   } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error("Login error:", err);
+    res.status(500).json({ success: false, message: err.message || "Login failed." });
   }
 });
 
@@ -381,7 +426,8 @@ app.post("/api/history", async (req, res) => {
   }
 
   try {
-    const userId = currentUserSession ? normalizeUserId(currentUserSession.user_id) : "U010";
+    const user = await getReqUser(req);
+    const userId = user ? normalizeUserId(user.user_id) : "U010";
 
     const countSnap = await db.collection('history').get();
     const nextId = `H${String(countSnap.size + 1).padStart(3, '0')}`;
@@ -407,7 +453,8 @@ app.post("/api/history", async (req, res) => {
 // GET /api/history/me
 app.get("/api/history/me", async (req, res) => {
   try {
-    const userId = currentUserSession ? normalizeUserId(currentUserSession.user_id) : "U010";
+    const user = await getReqUser(req);
+    const userId = user ? normalizeUserId(user.user_id) : "U010";
     const snap = await db.collection('history').where('user_id', '==', userId).get();
     
     const records = snap.docs.map(doc => {
@@ -492,21 +539,23 @@ app.get("/api/officers/county/:county", async (req, res) => {
 
 // USERS PROFILE
 // GET /api/users/profile
-app.get("/api/users/profile", (req, res) => {
-  if (!currentUserSession) {
+app.get("/api/users/profile", async (req, res) => {
+  const user = await getReqUser(req);
+  if (!user) {
     return res.status(401).json({ success: false, message: "Unauthorized. No active session." });
   }
-  res.json({ success: true, user: currentUserSession });
+  res.json({ success: true, user });
 });
 
 // PUT /api/users/profile
 app.put("/api/users/profile", async (req, res) => {
-  if (!currentUserSession) {
+  const user = await getReqUser(req);
+  if (!user) {
     return res.status(401).json({ success: false, message: "Unauthorized. No active session." });
   }
 
   const { full_name, phone, county, preferred_language, primary_crops_grown } = req.body;
-  const userId = normalizeUserId(currentUserSession.user_id);
+  const userId = normalizeUserId(user.user_id);
 
   try {
     const userRef = db.collection('users').doc(userId);
@@ -525,13 +574,14 @@ app.put("/api/users/profile", async (req, res) => {
     // Refresh session
     const refreshedDoc = await userRef.get();
     const data = refreshedDoc.data();
-    currentUserSession = {
+    const updatedUser = {
       ...data,
       user_id: data?.user_id || refreshedDoc.id,
       phone: data?.phone_number || data?.phone || ""
     };
+    currentUserSession = updatedUser;
 
-    res.json({ success: true, user: currentUserSession });
+    res.json({ success: true, user: updatedUser });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
   }

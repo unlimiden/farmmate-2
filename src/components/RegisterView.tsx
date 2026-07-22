@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ViewMode, Language, UserProfile } from '../types';
 import { translations } from '../data/translations';
 import { Lock, Mail, User, Phone, Eye, EyeOff, ShieldCheck, Cpu, ArrowRight } from 'lucide-react';
-import { getApiUrl } from '../lib/api';
+import { fetchWithAuth } from '../lib/api';
 
 interface RegisterViewProps {
   onNavigate: (view: ViewMode) => void;
@@ -38,7 +38,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(getApiUrl('/api/auth/register'), {
+      const response = await fetchWithAuth('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -54,12 +54,13 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
       });
 
       const contentType = response.headers.get("content-type");
-      let data;
+      let data: any = {};
       if (contentType && contentType.includes("application/json")) {
         data = await response.json();
       } else {
         const textVal = await response.text();
-        throw new Error(`Server returned non-JSON response (${response.status}): ${textVal.substring(0, 150)}`);
+        console.error("Non-JSON register response:", response.status, textVal);
+        throw new Error(language === 'sw' ? 'Hitilafu ya server.' : 'Server response error.');
       }
 
       if (response.ok && data.success) {
@@ -72,9 +73,9 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
       } else {
         setError(data.message || (language === 'sw' ? 'Sajili imeshindikana.' : 'Registration failed. Please try again.'));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Register error:", err);
-      setError(language === 'sw' ? 'Hitilafu ya mtandao.' : 'Connection error. Please try again.');
+      setError(err.message || (language === 'sw' ? 'Hitilafu ya mtandao.' : 'Connection error. Please try again.'));
     } finally {
       setLoading(false);
     }
