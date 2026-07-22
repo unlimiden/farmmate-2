@@ -12,6 +12,10 @@ export interface DiagnosisItem {
   confidence: number;
   treatment: string;
   symptoms: string[];
+  cause?: string;
+  prevention?: string[];
+  source_status?: string;
+  isOutsourced?: boolean;
   notes?: string;
 }
 

@@ -95,6 +95,17 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigate, 
     setMessages(prev => [...prev, newUserMsg]);
     setLoading(true);
 
+    // Create assistant message placeholder for real-time streaming
+    const botMsgId = `msg-${Date.now()}-bot`;
+    const initialBotMsg: Message = {
+      id: botMsgId,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, initialBotMsg]);
+
     try {
       // Build full conversation history for the endpoint
       const conversationalHistory = [...messages, newUserMsg].map(m => ({
@@ -102,39 +113,78 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigate, 
         content: m.content
       }));
 
-      const response = await fetchWithAuth('/api/chat', {
+      const response = await fetchWithAuth('/api/chat/stream', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream'
         },
         body: JSON.stringify({
           messages: conversationalHistory
         })
       });
 
-      const data = await response.json();
-      if (response.ok && data.success) {
-        const newBotMsg: Message = {
-          id: `msg-${Date.now()}-bot`,
-          role: 'assistant',
-          content: data.text,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, newBotMsg]);
+      const contentType = response.headers.get('content-type') || '';
+
+      if (contentType.includes('text/event-stream') && response.body) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let accumulatedText = '';
+        let done = false;
+        let buffer = '';
+
+        while (!done) {
+          const { value, done: doneReading } = await reader.read();
+          done = doneReading;
+          if (value) {
+            buffer += decoder.decode(value, { stream: !done });
+            const lines = buffer.split('\n\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (trimmed.startsWith('data: ')) {
+                const jsonStr = trimmed.slice(6);
+                if (jsonStr === '[DONE]') break;
+                try {
+                  const parsed = JSON.parse(jsonStr);
+                  if (parsed.text) {
+                    accumulatedText += parsed.text;
+                    setMessages(prev => prev.map(m => m.id === botMsgId ? { ...m, content: accumulatedText } : m));
+                  }
+                } catch (e) {
+                  accumulatedText += jsonStr;
+                  setMessages(prev => prev.map(m => m.id === botMsgId ? { ...m, content: accumulatedText } : m));
+                }
+              }
+            }
+          }
+        }
       } else {
-        throw new Error(data.message || 'Error from chatbot service');
+        // Fallback standard JSON response
+        const data = await response.json();
+        if (response.ok && data.success) {
+          const fullText = data.text || '';
+          // Stream text smoothly onto screen
+          let currentText = '';
+          const words = fullText.split(' ');
+          for (let i = 0; i < words.length; i++) {
+            currentText += (i === 0 ? '' : ' ') + words[i];
+            setMessages(prev => prev.map(m => m.id === botMsgId ? { ...m, content: currentText } : m));
+            await new Promise(r => setTimeout(r, 15));
+          }
+        } else {
+          throw new Error(data.message || 'Error from chatbot service');
+        }
       }
     } catch (err: any) {
       console.error("Chat error:", err);
-      const errorMsg: Message = {
-        id: `msg-${Date.now()}-err`,
-        role: 'assistant',
+      setMessages(prev => prev.map(m => m.id === botMsgId ? {
+        ...m,
         content: isSw 
           ? `Pole, nilipata hitilafu wakati wa kuwasiliana na mfumo wa AI. Tafadhali hakikisha ufunguo wa Gemini API umewekwa au jaribu tena baada ya muda mfupi.` 
-          : `I am sorry, but I encountered an error connecting to the AI system. Please verify that your Gemini API key is configured correctly or try again in a few moments.`,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMsg]);
+          : `I am sorry, but I encountered an error connecting to the AI system. Please verify that your Gemini API key is configured correctly or try again in a few moments.`
+      } : m));
     } finally {
       setLoading(false);
     }
