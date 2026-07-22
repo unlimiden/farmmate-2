@@ -82,11 +82,11 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
   };
 
   return (
-    <div className="w-full bg-[#f8fbef] min-h-screen flex flex-col justify-between py-12 px-4 font-sans">
-      <div className="max-w-xl w-full mx-auto space-y-6">
+    <div className="w-full bg-[#f8fbef] min-h-screen flex flex-col justify-between py-6 sm:py-12 px-3 sm:px-4 font-sans">
+      <div className="max-w-xl w-full mx-auto space-y-4 sm:space-y-6">
         {/* Brand Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-extrabold tracking-tight text-[#14532d]">
+        <div className="text-center space-y-1 sm:space-y-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#14532d]">
             {t.brandName}
           </h1>
           <p className="text-xs text-gray-600 font-medium">
@@ -95,7 +95,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({
         </div>
 
         {/* Main Card */}
-        <div className="bg-white border border-[#e2ebd4] rounded-3xl p-8 sm:p-10 shadow-xl space-y-6">
+        <div className="bg-white border border-[#e2ebd4] rounded-3xl p-5 sm:p-10 shadow-xl space-y-5 sm:space-y-6">
           <div className="space-y-1">
             <h2 className="text-2xl font-extrabold text-gray-900">{t.createAccount}</h2>
             <p className="text-xs text-gray-500 font-medium">{t.joinNetwork}</p>

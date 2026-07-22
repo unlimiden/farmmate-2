@@ -61,31 +61,31 @@ export const ContactView: React.FC<ContactViewProps> = ({ language, currentUser 
   };
 
   return (
-    <div className="w-full bg-[#f8fbef] min-h-screen px-4 lg:px-8 py-12 font-sans max-w-7xl mx-auto space-y-12">
+    <div className="w-full bg-[#f8fbef] min-h-screen px-4 sm:px-6 lg:px-8 py-6 sm:py-12 font-sans max-w-7xl mx-auto space-y-8 sm:space-y-12">
       {/* Header */}
-      <div className="text-center max-w-2xl mx-auto space-y-3">
-        <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">
+      <div className="text-center max-w-2xl mx-auto space-y-2 sm:space-y-3">
+        <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-gray-900">
           {language === 'sw' ? 'Wasiliana Nasi' : t.contactUs}
         </h1>
-        <p className="text-gray-600 text-base leading-relaxed">
+        <p className="text-gray-600 text-xs sm:text-base leading-relaxed">
           {language === 'sw' ? 'Tupo hapa kukusaidia na masuala yote ya kilimo.' : t.getInTouch}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
         {/* Contact Information Cards */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="bg-white border border-[#e2ebd4] rounded-2xl p-6 shadow-xs space-y-6">
-            <h3 className="text-xl font-bold text-gray-900">
+          <div className="bg-white border border-[#e2ebd4] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-5 sm:space-y-6">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900">
               {language === 'sw' ? 'Vituo vya Msaada' : 'Regional Support Centers'}
             </h3>
             
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl bg-[#c5e6ad] text-[#14532d] flex items-center justify-center shrink-0">
-                <MapPin className="w-5 h-5" />
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#c5e6ad] text-[#14532d] flex items-center justify-center shrink-0">
+                <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
-                <h4 className="font-semibold text-gray-900 text-sm">
+                <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">
                   {language === 'sw' ? 'Ofisi Kuu' : 'Headquarters'}
                 </h4>
                 <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">
@@ -95,12 +95,12 @@ export const ContactView: React.FC<ContactViewProps> = ({ language, currentUser 
               </div>
             </div>
 
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl bg-[#c5e6ad] text-[#14532d] flex items-center justify-center shrink-0">
-                <Mail className="w-5 h-5" />
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#c5e6ad] text-[#14532d] flex items-center justify-center shrink-0">
+                <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
-                <h4 className="font-semibold text-gray-900 text-sm">
+                <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">
                   {language === 'sw' ? 'Msaada kwa Barua Pepe' : 'Email Assistance'}
                 </h4>
                 <p className="text-xs text-gray-600 mt-0.5">
@@ -110,12 +110,12 @@ export const ContactView: React.FC<ContactViewProps> = ({ language, currentUser 
               </div>
             </div>
 
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl bg-[#c5e6ad] text-[#14532d] flex items-center justify-center shrink-0">
-                <Phone className="w-5 h-5" />
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#c5e6ad] text-[#14532d] flex items-center justify-center shrink-0">
+                <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
-                <h4 className="font-semibold text-gray-900 text-sm">
+                <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">
                   {language === 'sw' ? 'Nambari ya Simu' : 'Helpline'}
                 </h4>
                 <p className="text-xs text-gray-600 mt-0.5">
@@ -128,7 +128,7 @@ export const ContactView: React.FC<ContactViewProps> = ({ language, currentUser 
         </div>
 
         {/* Contact Form */}
-        <div className="lg:col-span-7 bg-white border border-[#e2ebd4] rounded-2xl p-8 shadow-xs">
+        <div className="lg:col-span-7 bg-white border border-[#e2ebd4] rounded-2xl p-5 sm:p-8 shadow-2xs">
           {formSubmitted ? (
             <div className="text-center py-16 space-y-4">
               <div className="w-16 h-16 bg-emerald-100 text-[#14532d] rounded-full flex items-center justify-center mx-auto">

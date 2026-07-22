@@ -22,10 +22,10 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, language }) => {
   };
 
   return (
-    <footer className="w-full bg-[#e8eedd] border-t border-[#d5e2c2] pt-12 pb-8 px-4 lg:px-8 mt-16 text-gray-700">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 pb-12 border-b border-[#d2e2bd]">
+    <footer className="w-full bg-[#e8eedd] border-t border-[#d5e2c2] pt-8 sm:pt-12 pb-6 sm:pb-8 px-4 sm:px-6 lg:px-8 mt-8 sm:mt-16 text-gray-700 font-sans">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 sm:gap-8 pb-8 sm:pb-12 border-b border-[#d2e2bd]">
         {/* Brand Column */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="sm:col-span-2 lg:col-span-2 space-y-3 sm:space-y-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-[#14532d] flex items-center justify-center text-white">
               <Bug className="w-4 h-4" />
@@ -34,7 +34,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, language }) => {
               {t.brandName}
             </span>
           </div>
-          <p className="text-sm text-gray-600 max-w-sm leading-relaxed">
+          <p className="text-xs sm:text-sm text-gray-600 max-w-sm leading-relaxed">
             Professional Stewardship of the Land. Advanced AI diagnostics and automated crop health tracking for regional agricultural managers.
           </p>
           <p className="text-xs text-gray-500">

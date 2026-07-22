@@ -102,10 +102,10 @@ export const LoginView: React.FC<LoginViewProps> = ({
   };
 
   return (
-    <div className="w-full bg-[#f8fbef] min-h-screen flex flex-col justify-between py-12 px-4 font-sans">
-      <div className="max-w-md w-full mx-auto space-y-6">
+    <div className="w-full bg-[#f8fbef] min-h-screen flex flex-col justify-between py-6 sm:py-12 px-3 sm:px-4 font-sans">
+      <div className="max-w-md w-full mx-auto space-y-4 sm:space-y-6">
         {/* Main Card */}
-        <div className="bg-white border border-[#e2ebd4] rounded-3xl p-8 shadow-xl space-y-6 relative overflow-hidden">
+        <div className="bg-white border border-[#e2ebd4] rounded-3xl p-5 sm:p-8 shadow-xl space-y-5 sm:space-y-6 relative overflow-hidden">
           {/* Logo Badge */}
           <div className="flex justify-center">
             <div className="w-12 h-12 rounded-2xl bg-[#14532d] flex items-center justify-center text-white shadow-md">
@@ -114,47 +114,47 @@ export const LoginView: React.FC<LoginViewProps> = ({
           </div>
 
           <div className="text-center space-y-1">
-            <h2 className="text-2xl font-extrabold text-gray-900">{t.welcomeBack}</h2>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900">{t.welcomeBack}</h2>
             <p className="text-xs text-gray-500 font-medium">{t.continueManaging}</p>
           </div>
 
           {/* Quick Login Testing Personas */}
-          <div className="p-4 bg-[#fcfdfa] border border-[#d8e5c4] rounded-2xl space-y-3 shadow-xs">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">
-              {language === 'sw' ? 'WASIFU WA MAJARIBIO (BONYEZA KUINGIA HARAKA)' : 'TESTING PERSONAS (CLICK TO LOG IN INSTANTLY)'}
+          <div className="p-3 sm:p-4 bg-[#fcfdfa] border border-[#d8e5c4] rounded-2xl space-y-2.5 shadow-2xs">
+            <p className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">
+              {language === 'sw' ? 'WASIFU WA MAJARIBIO (INGIA HARAKA)' : 'TESTING PERSONAS (CLICK TO LOG IN)'}
             </p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
               <button
                 type="button"
                 onClick={() => handlePersonaSelect('farmer@example.com')}
                 disabled={loading}
-                className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-[#e2ebd4] bg-white hover:border-[#14532d] hover:bg-[#fcfdfa] text-center transition-all group"
+                className="flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-xl border border-[#e2ebd4] bg-white hover:border-[#14532d] hover:bg-[#fcfdfa] text-center transition-all group min-w-0"
               >
-                <span className="text-lg">👩‍🌾</span>
-                <span className="text-[10px] font-extrabold text-gray-800 mt-1">{language === 'sw' ? 'Mkulima' : 'Farmer'}</span>
-                <span className="text-[8px] text-gray-400 font-semibold truncate w-full group-hover:text-[#14532d] mt-0.5">Test Mwangi</span>
+                <span className="text-base sm:text-lg">👩‍🌾</span>
+                <span className="text-[10px] font-extrabold text-gray-800 mt-0.5 truncate w-full">{language === 'sw' ? 'Mkulima' : 'Farmer'}</span>
+                <span className="text-[8px] text-gray-400 font-semibold truncate w-full group-hover:text-[#14532d]">Test Mwangi</span>
               </button>
               
               <button
                 type="button"
                 onClick={() => handlePersonaSelect('james.karanja@kilimo.go.ke')}
                 disabled={loading}
-                className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-[#e2ebd4] bg-white hover:border-[#14532d] hover:bg-[#fcfdfa] text-center transition-all group"
+                className="flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-xl border border-[#e2ebd4] bg-white hover:border-[#14532d] hover:bg-[#fcfdfa] text-center transition-all group min-w-0"
               >
-                <span className="text-lg">👔</span>
-                <span className="text-[10px] font-extrabold text-gray-800 mt-1">{language === 'sw' ? 'Afisa' : 'Officer'}</span>
-                <span className="text-[8px] text-gray-400 font-semibold truncate w-full group-hover:text-[#14532d] mt-0.5">J. Karanja</span>
+                <span className="text-base sm:text-lg">👔</span>
+                <span className="text-[10px] font-extrabold text-gray-800 mt-0.5 truncate w-full">{language === 'sw' ? 'Afisa' : 'Officer'}</span>
+                <span className="text-[8px] text-gray-400 font-semibold truncate w-full group-hover:text-[#14532d]">J. Karanja</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handlePersonaSelect('admin@farmmate.org')}
                 disabled={loading}
-                className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-[#e2ebd4] bg-white hover:border-[#14532d] hover:bg-[#fcfdfa] text-center transition-all group"
+                className="flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-xl border border-[#e2ebd4] bg-white hover:border-[#14532d] hover:bg-[#fcfdfa] text-center transition-all group min-w-0"
               >
-                <span className="text-lg">🛡️</span>
-                <span className="text-[10px] font-extrabold text-gray-800 mt-1">{language === 'sw' ? 'Msimamizi' : 'Admin'}</span>
-                <span className="text-[8px] text-gray-400 font-semibold truncate w-full group-hover:text-[#14532d] mt-0.5">Admin User</span>
+                <span className="text-base sm:text-lg">🛡️</span>
+                <span className="text-[10px] font-extrabold text-gray-800 mt-0.5 truncate w-full">{language === 'sw' ? 'Msimamizi' : 'Admin'}</span>
+                <span className="text-[8px] text-gray-400 font-semibold truncate w-full group-hover:text-[#14532d]">Admin User</span>
               </button>
             </div>
           </div>

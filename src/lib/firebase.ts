@@ -16,6 +16,7 @@ import {
 } from 'firebase/firestore';
 import fs from 'fs';
 import path from 'path';
+import appletConfig from '../../firebase-applet-config.json';
 
 // --- Skill Compliance Enums and Types ---
 export enum OperationType {
@@ -63,18 +64,31 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   throw new Error(JSON.stringify(errInfo));
 }
 
-let config: any = {};
-try {
-  const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
-  if (fs.existsSync(configPath)) {
-    config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+let config: any = appletConfig || {};
+if (!config || !config.projectId) {
+  try {
+    const configPath = path.join(process.cwd(), 'firebase-applet-config.json');
+    if (fs.existsSync(configPath)) {
+      config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    }
+  } catch (err) {
+    console.error("Error reading firebase-applet-config.json", err);
   }
-} catch (err) {
-  console.error("Error reading firebase-applet-config.json", err);
+}
+
+if ((!config || !config.projectId) && process.env.FIREBASE_CONFIG) {
+  try {
+    config = typeof process.env.FIREBASE_CONFIG === 'string'
+      ? JSON.parse(process.env.FIREBASE_CONFIG)
+      : process.env.FIREBASE_CONFIG;
+  } catch (e) {
+    console.error("Error parsing FIREBASE_CONFIG env var", e);
+  }
 }
 
 const app = initializeApp(config);
-const rawDb = getFirestore(app, config.firestoreDatabaseId);
+const databaseId = config.firestoreDatabaseId || process.env.FIRESTORE_DATABASE_ID;
+const rawDb = getFirestore(app, databaseId);
 
 // --- Connection Validation (Skill Mandatory Constraint) ---
 async function testConnection() {

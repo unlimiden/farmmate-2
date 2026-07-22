@@ -147,7 +147,7 @@ export const ScanModal: React.FC<ScanModalProps> = ({
         </div>
 
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
                 {language === 'sw' ? 'Aina ya Zao' : 'Crop Type'}
@@ -155,7 +155,7 @@ export const ScanModal: React.FC<ScanModalProps> = ({
               <select
                 value={selectedCropId}
                 onChange={(e) => setSelectedCropId(parseInt(e.target.value))}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#14532d]"
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#14532d]"
               >
                 {cropsList.map((crop) => (
                   <option key={crop.crop_id} value={crop.crop_id}>
@@ -172,7 +172,7 @@ export const ScanModal: React.FC<ScanModalProps> = ({
               <select
                 value={selectedDiseaseId}
                 onChange={(e) => setSelectedDiseaseId(parseInt(e.target.value))}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#14532d]"
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#14532d]"
               >
                 {diseasesList.map((disease) => (
                   <option key={disease.disease_id} value={disease.disease_id}>

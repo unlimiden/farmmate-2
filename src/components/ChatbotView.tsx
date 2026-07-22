@@ -50,6 +50,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigate, 
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [historyCount, setHistoryCount] = useState<number>(0);
+  const [showContextMobile, setShowContextMobile] = useState<boolean>(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -230,12 +231,26 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigate, 
   };
 
   return (
-    <div className="w-full bg-[#f8fbef] min-h-[calc(100vh-4rem)] py-6 px-4 lg:px-8 font-sans">
+    <div className="w-full bg-[#f8fbef] min-h-[calc(100vh-4rem)] py-4 sm:py-6 px-3 sm:px-6 lg:px-8 font-sans">
+      {/* Mobile Toggle Bar for Context Panel */}
+      <div className="lg:hidden mb-3">
+        <button
+          onClick={() => setShowContextMobile(!showContextMobile)}
+          className="w-full p-3 bg-white border border-[#e2ebd4] rounded-2xl flex items-center justify-between text-xs font-bold text-[#14532d] shadow-2xs"
+        >
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#14532d]" />
+            <span>{isSw ? 'Taarifa za Eneo Lako & Mazao' : 'View AI Grounding Context'}</span>
+          </div>
+          <ChevronRight className={`w-4 h-4 transition-transform ${showContextMobile ? 'rotate-90' : ''}`} />
+        </button>
+      </div>
+
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Side: Personalization Advisory Board */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="bg-white border border-[#e2ebd4] rounded-3xl p-5 shadow-xs space-y-5">
+        <div className={`lg:col-span-4 space-y-6 ${showContextMobile ? 'block' : 'hidden lg:block'}`}>
+          <div className="bg-white border border-[#e2ebd4] rounded-3xl p-4 sm:p-5 shadow-xs space-y-4 sm:space-y-5">
             <div className="flex items-center gap-2 border-b border-[#f4f7ee] pb-3">
               <Sparkles className="w-5 h-5 text-[#14532d]" />
               <div>
@@ -336,17 +351,17 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigate, 
         </div>
 
         {/* Right Side: Conversation Area */}
-        <div className="lg:col-span-8 flex flex-col h-[calc(100vh-8rem)] bg-white border border-[#e2ebd4] rounded-3xl overflow-hidden shadow-xs">
+        <div className="lg:col-span-8 flex flex-col h-[550px] sm:h-[620px] lg:h-[calc(100vh-8rem)] bg-white border border-[#e2ebd4] rounded-3xl overflow-hidden shadow-xs">
           
           {/* Chat Header */}
-          <div className="p-4 bg-[#fcfdfa] border-b border-[#e2ebd4] flex items-center justify-between shrink-0">
+          <div className="p-3.5 sm:p-4 bg-[#fcfdfa] border-b border-[#e2ebd4] flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 bg-[#14532d] rounded-2xl flex items-center justify-center text-white shadow-xs">
-                <Bot className="w-5.5 h-5.5 animate-pulse" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-[#14532d] rounded-2xl flex items-center justify-center text-white shadow-2xs">
+                <Bot className="w-5 h-5 sm:w-5.5 sm:h-5.5 animate-pulse" />
               </div>
               <div>
-                <h1 className="text-sm font-black text-gray-900 tracking-tight">FarmMate AI Advisory</h1>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                <h1 className="text-xs sm:text-sm font-black text-gray-900 tracking-tight">FarmMate AI Advisory</h1>
+                <p className="text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-ping"></span>
                   {isSw ? 'Msaidizi Maalum Amekamilika' : 'Personalized Assistant Active'}
                 </p>
@@ -355,29 +370,29 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigate, 
 
             <button
               onClick={clearChat}
-              className="px-3 py-1.5 border border-gray-100 hover:border-red-200 text-gray-500 hover:text-red-700 bg-white rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5"
+              className="px-2.5 py-1.5 border border-gray-100 hover:border-red-200 text-gray-500 hover:text-red-700 bg-white rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>{isSw ? 'Anzisha Upya' : 'Restart Chat'}</span>
+              <span className="hidden sm:inline">{isSw ? 'Anzisha Upya' : 'Restart Chat'}</span>
             </button>
           </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-[#fafdf6]">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-3 sm:space-y-4 bg-[#fafdf6]">
             {messages.map((m) => {
               const isBot = m.role === 'assistant';
               return (
                 <div
                   key={m.id}
-                  className={`flex gap-3 max-w-4xl ${isBot ? 'mr-12' : 'ml-auto mr-0 flex-row-reverse pl-12'}`}
+                  className={`flex gap-2.5 sm:gap-3 max-w-4xl ${isBot ? 'mr-4 sm:mr-12' : 'ml-auto mr-0 flex-row-reverse pl-4 sm:pl-12'}`}
                 >
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 shadow-xs ${
+                  <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold shrink-0 shadow-2xs ${
                     isBot ? 'bg-[#14532d] text-white' : 'bg-[#eaf2e0] border border-[#d2e2bd] text-[#14532d]'
                   }`}>
-                    {isBot ? <Bot className="w-4 h-4" /> : <UserIcon className="w-4 h-4" />}
+                    {isBot ? <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <UserIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                   </div>
 
-                  <div className={`p-4 rounded-2xl shadow-2xs space-y-1 ${
+                  <div className={`p-3 sm:p-4 rounded-2xl shadow-2xs space-y-1 ${
                     isBot 
                       ? 'bg-white border border-[#e2ebd4] text-gray-800 rounded-tl-xs' 
                       : 'bg-[#14532d] text-white rounded-tr-xs'
@@ -397,11 +412,11 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigate, 
 
             {/* AI Typing Loader Indicator */}
             {loading && (
-              <div className="flex gap-3 mr-12 max-w-lg">
-                <div className="w-8 h-8 rounded-xl bg-[#14532d] text-white flex items-center justify-center shrink-0">
-                  <Bot className="w-4 h-4 animate-bounce" />
+              <div className="flex gap-2.5 mr-4 sm:mr-12 max-w-lg">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#14532d] text-white flex items-center justify-center shrink-0">
+                  <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-bounce" />
                 </div>
-                <div className="p-4 bg-white border border-[#e2ebd4] rounded-2xl rounded-tl-xs shadow-2xs">
+                <div className="p-3 sm:p-4 bg-white border border-[#e2ebd4] rounded-2xl rounded-tl-xs shadow-2xs">
                   <div className="flex items-center gap-1 py-1 px-1.5">
                     <span className="w-2 h-2 bg-[#14532d] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
                     <span className="w-2 h-2 bg-[#14532d] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>

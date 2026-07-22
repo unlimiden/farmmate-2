@@ -23,84 +23,84 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const t = translations[language];
 
   return (
-    <div className="w-full bg-[#f8fbef] min-h-screen px-4 lg:px-8 py-8 font-sans space-y-8 max-w-7xl mx-auto">
+    <div className="w-full bg-[#f8fbef] min-h-screen px-4 sm:px-6 lg:px-8 py-6 sm:py-8 font-sans space-y-6 sm:space-y-8 max-w-7xl mx-auto">
       {/* Top Header & Supervisor Card Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-        <div className="lg:col-span-8 space-y-2">
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-center">
+        <div className="lg:col-span-8 space-y-1 sm:space-y-2 text-left">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
             Hello, {user.name}
           </h1>
-          <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
+          <p className="text-gray-600 text-xs sm:text-sm md:text-base leading-relaxed">
             Welcome back to your stewardship portal. Here is your farm's health overview.
           </p>
         </div>
 
         {/* Supervisor Card */}
-        <div className="lg:col-span-4 bg-white border border-[#e2ebd4] rounded-2xl p-4 shadow-xs flex items-center gap-4">
+        <div className="lg:col-span-4 bg-white border border-[#e2ebd4] rounded-2xl p-4 shadow-2xs flex items-center gap-4">
           <img
             src={user.avatar}
             alt={user.name}
-            className="w-14 h-14 rounded-full object-cover border-2 border-[#14532d]"
+            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-[#14532d] shrink-0"
             referrerPolicy="no-referrer"
           />
-          <div>
-            <h4 className="font-bold text-gray-900 text-sm">{user.role}</h4>
-            <p className="text-xs text-gray-500 font-medium">{user.district}</p>
+          <div className="min-w-0">
+            <h4 className="font-bold text-gray-900 text-sm truncate">{user.role}</h4>
+            <p className="text-xs text-gray-500 font-medium truncate">{user.district}</p>
           </div>
         </div>
       </div>
 
       {/* 4 Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Metric 1 */}
-        <div className="bg-white border-l-4 border-l-[#14532d] border border-[#e2ebd4] rounded-xl p-5 shadow-xs space-y-2">
-          <p className="text-xs font-bold uppercase tracking-wider text-gray-500">{t.totalDiagnoses}</p>
-          <div className="flex items-baseline justify-between">
-            <h3 className="text-3xl font-extrabold text-gray-900">{diagnoses.length}</h3>
-            <span className="flex items-center text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+        <div className="bg-white border-l-4 border-l-[#14532d] border border-[#e2ebd4] rounded-xl p-4 sm:p-5 shadow-2xs space-y-2">
+          <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-500">{t.totalDiagnoses}</p>
+          <div className="flex items-baseline justify-between gap-2">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-gray-900">{diagnoses.length}</h3>
+            <span className="flex items-center text-[11px] sm:text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0">
               <TrendingUp className="w-3 h-3 mr-1" />
-              Active Database Records
+              Active Database
             </span>
           </div>
         </div>
 
         {/* Metric 2 */}
-        <div className="bg-white border-l-4 border-l-[#16a34a] border border-[#e2ebd4] rounded-xl p-5 shadow-xs space-y-2">
-          <p className="text-xs font-bold uppercase tracking-wider text-gray-500">{t.healthyCrops}</p>
-          <div className="flex items-baseline justify-between">
-            <h3 className="text-3xl font-extrabold text-[#16a34a]">
+        <div className="bg-white border-l-4 border-l-[#16a34a] border border-[#e2ebd4] rounded-xl p-4 sm:p-5 shadow-2xs space-y-2">
+          <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-500">{t.healthyCrops}</p>
+          <div className="flex items-baseline justify-between gap-2">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-[#16a34a]">
               {diagnoses.filter(d => d.status === 'Success').length}
             </h3>
-            <span className="text-xs font-medium text-gray-500">
+            <span className="text-[11px] sm:text-xs font-medium text-gray-500 shrink-0">
               {diagnoses.length > 0
-                ? ((diagnoses.filter(d => d.status === 'Success').length / diagnoses.length) * 100).toFixed(1)
-                : 0}% of total scans
+                ? ((diagnoses.filter(d => d.status === 'Success').length / diagnoses.length) * 100).toFixed(0)
+                : 0}% of scans
             </span>
           </div>
         </div>
 
         {/* Metric 3 */}
-        <div className="bg-white border-l-4 border-l-amber-600 border border-[#e2ebd4] rounded-xl p-5 shadow-xs space-y-2">
-          <p className="text-xs font-bold uppercase tracking-wider text-gray-500">{t.diseasedCrops}</p>
-          <div className="flex items-baseline justify-between">
-            <h3 className="text-3xl font-extrabold text-amber-700">
+        <div className="bg-white border-l-4 border-l-amber-600 border border-[#e2ebd4] rounded-xl p-4 sm:p-5 shadow-2xs space-y-2">
+          <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-500">{t.diseasedCrops}</p>
+          <div className="flex items-baseline justify-between gap-2">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-amber-700">
               {diagnoses.filter(d => d.status !== 'Success').length}
             </h3>
-            <span className="flex items-center text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+            <span className="flex items-center text-[11px] sm:text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full shrink-0">
               <AlertTriangle className="w-3 h-3 mr-1" />
-              {diagnoses.filter(d => d.status !== 'Success').length > 0 ? 'Action required' : 'All clear'}
+              {diagnoses.filter(d => d.status !== 'Success').length > 0 ? 'Action needed' : 'All clear'}
             </span>
           </div>
         </div>
 
         {/* Metric 4 */}
-        <div className="bg-white border-l-4 border-l-[#7c2d12] border border-[#e2ebd4] rounded-xl p-5 shadow-xs space-y-2">
-          <p className="text-xs font-bold uppercase tracking-wider text-gray-500">{t.treatmentsViewed}</p>
-          <div className="flex items-baseline justify-between">
-            <h3 className="text-3xl font-extrabold text-[#7c2d12]">
+        <div className="bg-white border-l-4 border-l-[#7c2d12] border border-[#e2ebd4] rounded-xl p-4 sm:p-5 shadow-2xs space-y-2">
+          <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-gray-500">{t.treatmentsViewed}</p>
+          <div className="flex items-baseline justify-between gap-2">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-[#7c2d12]">
               {diagnoses.filter(d => d.status !== 'Success' && d.treatment).length}
             </h3>
-            <span className="text-xs font-medium text-gray-500">
+            <span className="text-[11px] sm:text-xs font-medium text-gray-500 shrink-0">
               Across {new Set(diagnoses.map(d => d.crop)).size} crop types
             </span>
           </div>

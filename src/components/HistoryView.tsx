@@ -30,44 +30,44 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
   });
 
   return (
-    <div className="w-full bg-[#f8fbef] min-h-screen px-4 lg:px-8 py-8 font-sans max-w-7xl mx-auto space-y-8">
+    <div className="w-full bg-[#f8fbef] min-h-screen px-4 sm:px-6 lg:px-8 py-6 sm:py-8 font-sans max-w-7xl mx-auto space-y-6 sm:space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">{t.history}</h1>
-          <p className="text-gray-600 text-sm">Comprehensive log of all AI crop scans and pathology reports.</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900">{t.history}</h1>
+          <p className="text-gray-600 text-xs sm:text-sm">Comprehensive log of all AI crop scans and pathology reports.</p>
         </div>
         <button
           onClick={onOpenScanModal}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#14532d] text-white rounded-lg text-sm font-semibold hover:bg-[#0f4023] shadow-xs transition-colors"
+          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[#14532d] text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-[#0f4023] shadow-2xs transition-colors min-h-[44px]"
         >
-          <span>New AI Scan</span>
+          <span>New Inspection Record</span>
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white border border-[#e2ebd4] rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="relative w-full sm:w-96">
+      <div className="bg-white border border-[#e2ebd4] rounded-2xl p-3.5 sm:p-4 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+        <div className="relative w-full sm:w-80 md:w-96">
           <Search className="absolute left-3.5 top-3 w-4 h-4 text-gray-400" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by crop or disease..."
-            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#14532d]"
+            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#14532d]"
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-          <Filter className="w-4 h-4 text-gray-500 mr-1" />
+        <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
+          <Filter className="w-4 h-4 text-gray-500 mr-1 shrink-0" />
           {(['All', 'Success', 'Warning', 'Critical'] as const).map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+              className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                 statusFilter === status
-                  ? 'bg-[#14532d] text-white shadow-xs'
+                  ? 'bg-[#14532d] text-white shadow-2xs'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -78,7 +78,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
       </div>
 
       {/* Grid of Diagnoses Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredDiagnoses.map((item) => (
           <div
             key={item.id}
