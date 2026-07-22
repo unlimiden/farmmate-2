@@ -18,7 +18,7 @@ import {
   ClipboardList,
   ChevronRight
 } from 'lucide-react';
-import { getApiUrl } from '../lib/api';
+import { fetchWithAuth } from '../lib/api';
 
 interface Message {
   id: string;
@@ -63,7 +63,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigate, 
   useEffect(() => {
     const fetchHistoryDetails = async () => {
       try {
-        const res = await fetch(getApiUrl('/api/history/me'));
+        const res = await fetchWithAuth('/api/history/me');
         if (res.ok) {
           const data = await res.json();
           if (data.success && data.history) {
@@ -102,7 +102,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigate, 
         content: m.content
       }));
 
-      const response = await fetch(getApiUrl('/api/chatbot/chat'), {
+      const response = await fetchWithAuth('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

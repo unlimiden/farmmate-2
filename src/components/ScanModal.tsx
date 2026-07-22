@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { DiagnosisItem, Language } from '../types';
 import { translations } from '../data/translations';
 import { X, Upload, Database, Loader2, CheckCircle2 } from 'lucide-react';
-import { getApiUrl } from '../lib/api';
+import { getApiUrl, fetchWithAuth } from '../lib/api';
 
 interface ScanModalProps {
   isOpen: boolean;
@@ -37,7 +37,7 @@ export const ScanModal: React.FC<ScanModalProps> = ({
   // Load Crops
   useEffect(() => {
     if (isOpen) {
-      fetch(getApiUrl('/api/crops'))
+      fetchWithAuth('/api/crops')
         .then(res => res.json())
         .then(data => {
           if (data.success && data.crops) {
@@ -54,7 +54,7 @@ export const ScanModal: React.FC<ScanModalProps> = ({
   // Load Diseases associated with the selected crop
   useEffect(() => {
     if (isOpen && selectedCropId) {
-      fetch(getApiUrl(`/api/diseases/crop/${selectedCropId}`))
+      fetchWithAuth(`/api/diseases/crop/${selectedCropId}`)
         .then(res => res.json())
         .then(data => {
           if (data.success && data.diseases) {
@@ -95,7 +95,7 @@ export const ScanModal: React.FC<ScanModalProps> = ({
 
     setLoading(true);
     try {
-      const response = await fetch(getApiUrl('/api/history'), {
+      const response = await fetchWithAuth('/api/history', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

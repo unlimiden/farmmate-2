@@ -17,7 +17,7 @@ import {
   X,
   FileText
 } from 'lucide-react';
-import { getApiUrl } from '../lib/api';
+import { fetchWithAuth } from '../lib/api';
 
 interface Crop {
   crop_id: string;
@@ -91,8 +91,8 @@ export const SymptomsView: React.FC<SymptomsViewProps> = ({ language, onNavigate
       setError(null);
       try {
         const [cropsRes, diseasesRes] = await Promise.all([
-          fetch(getApiUrl('/api/crops')),
-          fetch(getApiUrl('/api/diseases/detailed'))
+          fetchWithAuth('/api/crops'),
+          fetchWithAuth('/api/diseases/detailed')
         ]);
 
         if (!cropsRes.ok || !diseasesRes.ok) {
