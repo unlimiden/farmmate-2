@@ -48,7 +48,17 @@ function normalizeUserId(id: any): string {
 }
 
 // In-memory active user session (backed by Firestore users)
-let currentUserSession: any = null;
+let currentUserSession: any = {
+  user_id: 'U010',
+  full_name: 'Wanjiku Kamau',
+  role: 'Farmer',
+  county: 'Nairobi',
+  email: 'wanjiku@farmmate.co.ke',
+  phone: '+254 700 999 888',
+  preferred_language: 'English',
+  primary_crops_grown: 'Maize, Tomato',
+  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200'
+};
 
 // Initial session setup helper
 async function setupInitialSession() {
@@ -63,7 +73,7 @@ async function setupInitialSession() {
       };
     }
   } catch (err) {
-    console.error("Failed to load default user session:", err);
+    console.error("Failed to load default user session from Firestore, using in-memory fallback:", err);
   }
 }
 
@@ -701,10 +711,6 @@ Guidelines:
 // ----------------------------------------------------
 
 async function startServer() {
-  // Boot & seed database bulk records if empty
-  await seedDatabase();
-  await setupInitialSession();
-
   if (process.env.NODE_ENV !== "production") {
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
@@ -722,6 +728,11 @@ async function startServer() {
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    
+    // Seed database & initial session in background to prevent blocking port 3000 boot
+    Promise.all([seedDatabase(), setupInitialSession()])
+      .then(() => console.log("Database background initialization completed."))
+      .catch(err => console.error("Database background initialization error:", err));
   });
 }
 
