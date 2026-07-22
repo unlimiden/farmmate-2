@@ -137,23 +137,23 @@ export const SymptomsView: React.FC<SymptomsViewProps> = ({ language, onNavigate
     // 3. Search query (matches disease name, description, crop name, causal agent, symptom descriptions, or treatments)
     if (searchQuery.trim() !== '') {
       const query = searchQuery.toLowerCase();
-      const matchName = disease.disease_name.toLowerCase().includes(query);
-      const matchDesc = disease.description?.toLowerCase().includes(query);
-      const matchCrop = disease.crop_name.toLowerCase().includes(query);
-      const matchAgent = disease.causal_agent?.toLowerCase().includes(query);
+      const matchName = String(disease.disease_name || '').toLowerCase().includes(query);
+      const matchDesc = String(disease.description || '').toLowerCase().includes(query);
+      const matchCrop = String(disease.crop_name || '').toLowerCase().includes(query);
+      const matchAgent = String(disease.causal_agent || '').toLowerCase().includes(query);
       
       const matchSymptoms = disease.symptoms?.some(s => 
-        s.symptom_description.toLowerCase().includes(query) || 
-        s.severity_stage?.toLowerCase().includes(query)
+        String(s.symptom_description || '').toLowerCase().includes(query) || 
+        String(s.severity_stage || '').toLowerCase().includes(query)
       );
 
       const matchTreatments = disease.treatments?.some(tr => 
-        tr.treatment_recommendation.toLowerCase().includes(query) ||
-        tr.treatment_type?.toLowerCase().includes(query)
+        String(tr.treatment_recommendation || '').toLowerCase().includes(query) ||
+        String(tr.treatment_type || '').toLowerCase().includes(query)
       );
 
       const matchPreventions = disease.preventions?.some(pr => 
-        pr.prevention_method.toLowerCase().includes(query)
+        String(pr.prevention_method || '').toLowerCase().includes(query)
       );
 
       return matchName || matchDesc || matchCrop || matchAgent || matchSymptoms || matchTreatments || matchPreventions;
@@ -170,8 +170,8 @@ export const SymptomsView: React.FC<SymptomsViewProps> = ({ language, onNavigate
     }
   };
 
-  const getPathogenBadgeStyles = (type: string) => {
-    const cleanType = type.toLowerCase();
+  const getPathogenBadgeStyles = (type?: string) => {
+    const cleanType = String(type || '').toLowerCase();
     if (cleanType.includes('fungal')) {
       return 'bg-purple-50 text-purple-700 border-purple-200';
     } else if (cleanType.includes('viral')) {
@@ -431,7 +431,7 @@ export const SymptomsView: React.FC<SymptomsViewProps> = ({ language, onNavigate
                                   {isSw ? 'Hatua ya Mapema' : 'Early Stage'}
                                 </span>
                                 <ul className="space-y-1 pt-1">
-                                  {disease.symptoms.filter(s => s.severity_stage?.toLowerCase().includes('early') || disease.symptoms.length === 1).map((s, i) => (
+                                  {disease.symptoms.filter(s => String(s?.severity_stage || '').toLowerCase().includes('early') || disease.symptoms.length === 1).map((s, i) => (
                                     <li key={i} className="text-[11px] text-gray-600 leading-relaxed flex items-start gap-1.5">
                                       <span className="text-amber-500 mt-0.5">•</span>
                                       <span>{s.symptom_description}</span>
@@ -449,13 +449,13 @@ export const SymptomsView: React.FC<SymptomsViewProps> = ({ language, onNavigate
                                   {isSw ? 'Hatua ya Juu' : 'Advanced Stage'}
                                 </span>
                                 <ul className="space-y-1 pt-1">
-                                  {disease.symptoms.filter(s => s.severity_stage?.toLowerCase().includes('advanced')).map((s, i) => (
+                                  {disease.symptoms.filter(s => String(s?.severity_stage || '').toLowerCase().includes('advanced')).map((s, i) => (
                                     <li key={i} className="text-[11px] text-gray-600 leading-relaxed flex items-start gap-1.5">
                                       <span className="text-red-500 mt-0.5">•</span>
                                       <span>{s.symptom_description}</span>
                                     </li>
                                   ))}
-                                  {disease.symptoms.filter(s => s.severity_stage?.toLowerCase().includes('advanced')).length === 0 && (
+                                  {disease.symptoms.filter(s => String(s?.severity_stage || '').toLowerCase().includes('advanced')).length === 0 && (
                                     <li className="text-[11px] text-gray-400 italic">
                                       {isSw ? 'Madoa kuenea au kukausha mmea' : 'General spreading and severe foliage damage'}
                                     </li>

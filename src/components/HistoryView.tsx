@@ -23,8 +23,10 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
   const [statusFilter, setStatusFilter] = useState<'All' | 'Success' | 'Warning' | 'Critical'>('All');
 
   const filteredDiagnoses = diagnoses.filter((item) => {
-    const matchesSearch = item.crop.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          item.disease.toLowerCase().includes(searchTerm.toLowerCase());
+    const cropName = String(item.crop || '').toLowerCase();
+    const diseaseName = String(item.disease || '').toLowerCase();
+    const query = String(searchTerm || '').toLowerCase();
+    const matchesSearch = cropName.includes(query) || diseaseName.includes(query);
     const matchesStatus = statusFilter === 'All' || item.status === statusFilter;
     return matchesSearch && matchesStatus;
   });

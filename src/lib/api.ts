@@ -40,7 +40,7 @@ const getClientHistory = () => {
   const initialHistory = historySeed.map(h => {
     const crop = cropsSeed.find(c => c.crop_id === h.crop_id) || { crop_name: "Crop" };
     const disease = diseasesSeed.find(d => d.disease_id === h.disease_id) || { disease_name: "Healthy" };
-    const isHealthy = disease.disease_name.toLowerCase().includes("healthy");
+    const isHealthy = String(disease?.disease_name || '').toLowerCase().includes("healthy");
     const diseaseTreatments = treatmentsSeed.filter(t => t.disease_id === h.disease_id).map(t => t.treatment_recommendation);
     const diseaseSymptoms = symptomsSeed.filter(s => s.disease_id === h.disease_id).map(s => s.symptom_description);
 
@@ -165,7 +165,7 @@ const handleClientFallback = async (path: string, options: RequestInit = {}): Pr
 
       const crop = cropsSeed.find(c => c.crop_id === cropId) || cropsSeed[0];
       const disease = diseasesSeed.find(d => d.disease_id === diseaseId) || diseasesSeed[0];
-      const isHealthy = disease.disease_name.toLowerCase().includes("healthy");
+      const isHealthy = String(disease?.disease_name || '').toLowerCase().includes("healthy");
       const diseaseTreatments = treatmentsSeed.filter(t => t.disease_id === diseaseId).map(t => t.treatment_recommendation);
       const diseaseSymptoms = symptomsSeed.filter(s => s.disease_id === diseaseId).map(s => s.symptom_description);
 
@@ -198,10 +198,10 @@ const handleClientFallback = async (path: string, options: RequestInit = {}): Pr
     const isSw = body.language === 'sw';
 
     const matchedDisease = diseasesSeed.find(d => 
-      d.disease_name.toLowerCase().includes('blight') || d.disease_name.toLowerCase().includes('spot')
+      String(d?.disease_name || '').toLowerCase().includes('blight') || String(d?.disease_name || '').toLowerCase().includes('spot')
     ) || diseasesSeed[0];
 
-    const isHealthy = matchedDisease.disease_name.toLowerCase().includes("healthy");
+    const isHealthy = String(matchedDisease?.disease_name || '').toLowerCase().includes("healthy");
     const diseaseTreatments = treatmentsSeed.filter(t => t.disease_id === matchedDisease.disease_id).map(t => t.treatment_recommendation);
     const diseaseSymptoms = symptomsSeed.filter(s => s.disease_id === matchedDisease.disease_id).map(s => s.symptom_description);
     const diseasePreventions = preventionsSeed.filter(p => p.disease_id === matchedDisease.disease_id).map(p => p.prevention_method);
